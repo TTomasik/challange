@@ -1,11 +1,15 @@
 FROM python:3.8
+
 WORKDIR /var/www/server
+
 COPY adverity ./adverity
 COPY star_wars ./star_wars
+COPY csv_files ./csv_files
 COPY manage.py ./
 COPY requirements.txt ./
+COPY run.sh ./
+
 RUN pip install -r requirements.txt
-RUN ls
-RUN python manage.py makemigrations
-RUN python manage.py migrate
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+RUN chmod +x run.sh
+CMD ["bash", "run.sh"]

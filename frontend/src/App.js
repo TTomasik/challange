@@ -33,15 +33,14 @@ const App = () => {
     const [headers, setHeaders] = useState([]);
 
     useEffect(() => {
-        getAllCollections();
+        axios.get(CSV_FILES_URL).then(response =>
+            {setAllCollections(response.data)}
+        );
     }, [isFetching]);
 
     const setAllCollections = collections => {
         setCollections(collections);
     }
-
-    const getAllCollections = () =>
-        axios.get(CSV_FILES_URL).then(response => {setAllCollections(response.data)});
 
     const onOpenCollection = csvId =>
         axios.get(CHARACTERS_URL(csvId)).then(response => {

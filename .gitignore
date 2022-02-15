@@ -2,3 +2,6 @@
 adverity/__pycache__/
 star_wars/__pycache__/
 star_wars/migrations/__pycache__/
+frontend/node_modules/
+frontend/.idea/
+csv_files/

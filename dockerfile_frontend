@@ -1,0 +1,8 @@
+FROM node:13.12.0-alpine
+WORKDIR /var/www
+COPY ./frontend/ ./frontend
+WORKDIR /var/www/frontend
+RUN npm cache clean --force
+RUN npm install
+EXPOSE 3000
+CMD ["npm", "start"]

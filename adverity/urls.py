@@ -17,9 +17,10 @@ from django.contrib import admin
 from django.urls import path
 from rest_framework import routers
 
-from star_wars.views import CSVFileDataView, PeopleView, ValueCountView
+from star_wars.views import CSVFileDataView, PeopleView, StarWarsView, ValueCountView
 
 router = routers.SimpleRouter()
+router.register(r'api/fetch_newest_collection', StarWarsView, 'fetch-newest-collection')
 router.register(r'api/csv_files', CSVFileDataView, 'csv-files')
 router.register(r'api/people', PeopleView, 'people')
 router.register(r'api/value_count', ValueCountView, 'people')

@@ -17,20 +17,23 @@ CSV_REGULAR_COLUMNS = [
 CSV_CUSTOM_COLUMNS = ['homeworld', 'date']
 CSV_FILES_DIR_PATH = '/var/www/server/csv_files/'
 
+STAR_WARS_API_EXCEPTION = 'Problems occurred when requesting STAR WARS API.'
+FILE_NOT_FOUND_EXCEPTION = 'File with provided id does not exists.'
+
 
 class StarWarsAPI:
     # *swapi.co* is not supported and maintained anymore
     # this is why I used: *swapi.dev*
-    INITIAL_PLANETS_URL = 'https://swapi.dev/api/planets/'
-    INITIAL_PEOPLE_URL = 'https://swapi.dev/api/people/'
+    _INITIAL_PLANETS_URL = 'https://swapi.dev/api/planets/'
+    _INITIAL_PEOPLE_URL = 'https://swapi.dev/api/people/'
 
     def __init__(self):
         self.all_people = []
         self.all_planets = {}
-        self.initial_urls = [self.INITIAL_PLANETS_URL, self.INITIAL_PEOPLE_URL]
+        self.initial_urls = [self._INITIAL_PLANETS_URL, self._INITIAL_PEOPLE_URL]
 
     def set_data(self, *, obj, url):
-        if url.startswith(self.INITIAL_PLANETS_URL):
+        if url.startswith(self._INITIAL_PLANETS_URL):
             self.all_planets[obj['url']] = obj['name']
         else:
             data = []
@@ -68,6 +71,20 @@ class StarWarsAPI:
         return self.save_data()
 
 
+class StarWarsView(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    permission_classes = (AllowAny,)
+
+    def create(self, request):
+        try:
+            StarWarsAPI().fetch_and_save_data()
+        except Exception:
+            return Response(
+                data={'detail': STAR_WARS_API_EXCEPTION},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(status=status.HTTP_201_CREATED)
+
+
 def get_table_from_csv_id(csv_id):
     csv_file_data = get_object_or_404(CSVFileData, id=csv_id)
     filename = csv_file_data.csv_name
@@ -75,9 +92,10 @@ def get_table_from_csv_id(csv_id):
 
 
 class CSVFileDataView(viewsets.ModelViewSet):
-    queryset = CSVFileData.objects.all()
+    queryset = CSVFileData.objects.all().order_by("-id")
     serializer_class = CSVFileDataSerializer
     http_method_names = ['get']
+    permission_classes = (AllowAny,)
 
 
 class PeopleView(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -89,20 +107,25 @@ class PeopleView(mixins.ListModelMixin, viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
 
         csv_id = serializer.data["csv_id"]
-        results_per_page = serializer.data["results_per_page"]
+        start_idx = serializer.data["start_idx"]
+        stop_idx = serializer.data["stop_idx"]
 
         people_table = get_table_from_csv_id(csv_id)
 
-        if results_per_page > etl.nrows(people_table):
-            results_per_page = etl.nrows(people_table)
+        try:
+            if stop_idx > etl.nrows(people_table):
+                stop_idx = etl.nrows(people_table)
 
-        return Response(
-            data={
-                "results": results_per_page,
-                "data": list(etl.head(people_table, results_per_page))
-            },
-            status=status.HTTP_200_OK
-        )
+            data = list(etl.rowslice(people_table, start_idx, stop_idx))
+            return Response(
+                data={"data": data, "results": len(data) - 1},
+                status=status.HTTP_200_OK
+            )
+        except FileNotFoundError:
+            return Response(
+                data={'detail': FILE_NOT_FOUND_EXCEPTION},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class ValueCountView(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -122,7 +145,13 @@ class ValueCountView(mixins.ListModelMixin, viewsets.GenericViewSet):
             filter(lambda value: request_params[value], request_params.keys())
         )
 
-        return Response(
-            data=list(etl.valuecounts(people_table, *value_to_aggregate)),
-            status=status.HTTP_200_OK
-        )
+        try:
+            return Response(
+                data={"data": list(etl.valuecounts(people_table, *value_to_aggregate))},
+                status=status.HTTP_200_OK
+            )
+        except FileNotFoundError:
+            return Response(
+                data={'detail': FILE_NOT_FOUND_EXCEPTION},
+                status=status.HTTP_400_BAD_REQUEST
+            )

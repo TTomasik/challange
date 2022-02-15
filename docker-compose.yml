@@ -8,7 +8,7 @@ services:
     volumes:
       - .:/var/www/server
     ports:
-      - "80:8000"
+      - "8000:8000"
     depends_on:
       - db
   db:
@@ -20,3 +20,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
+  frontend:
+    build:
+      context: .
+      dockerfile: dockerfile_frontend
+    volumes:
+      - ./frontend:/var/www/frontend
+    ports:
+      - "3000:3000"

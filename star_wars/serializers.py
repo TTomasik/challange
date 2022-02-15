@@ -17,7 +17,8 @@ class BaseParamsSerializer(serializers.Serializer):
 
 
 class PeopleParamsSerializer(BaseParamsSerializer):
-    results_per_page = serializers.IntegerField(default=10, min_value=1)
+    start_idx = serializers.IntegerField(default=0, min_value=0)
+    stop_idx = serializers.IntegerField(default=10, min_value=10)
 
 
 class ValueCountParamsSerializer(BaseParamsSerializer):

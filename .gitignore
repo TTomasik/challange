@@ -5,3 +5,4 @@ star_wars/migrations/__pycache__/
 frontend/node_modules/
 frontend/.idea/
 csv_files/*.csv
+star_wars/tests/__pycache__/

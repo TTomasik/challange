@@ -19,6 +19,11 @@ If you have done it before you can start the application using below command:
 docker-compose up
 ```
 
+Application is running on below URL:
+```bash
+http://127.0.0.1:3000
+```
+
 To stop the application run:
 ```bash
 docker-compose down

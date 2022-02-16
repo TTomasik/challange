@@ -57,5 +57,7 @@ requests to an application server.
 
 1. `django-cors-headers` package is installed and set up in the `settings.py` but if any problems with CORS occur
    installing CORS extension in the browser might help.
+2. To run tests locally execute `pytest` from main dir (you need to have `postgresql` and proper database with migrations.
+Database name/credentials can be found in `.env` file). 
 
 15-02-2022
